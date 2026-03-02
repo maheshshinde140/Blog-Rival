@@ -30,7 +30,30 @@ export class BlogsController {
     const pageNum = page ? parseInt(page, 10) : 1;
     const limitNum = limit ? parseInt(limit, 10) : 10;
     const pagination = new PaginationDto(pageNum, limitNum);
-    return this.blogsService.findAll(pagination);
+    const result = await this.blogsService.findAll(pagination);
+
+    return {
+      data: (result.data || []).map((blog: any) => {
+        const blogObj = blog.toObject ? blog.toObject() : blog;
+        return {
+          id: blogObj._id,
+          title: blogObj.title,
+          slug: blogObj.slug,
+          summary: blogObj.summary,
+          featuredImage: blogObj.featuredImage,
+          author: {
+            id: blogObj.userId?._id || '',
+            firstName: blogObj.userId?.firstName || '',
+            lastName: blogObj.userId?.lastName || '',
+            profileImage: blogObj.userId?.profileImage || '',
+          },
+          likeCount: blogObj.likeCount,
+          commentCount: blogObj.commentCount,
+          createdAt: blogObj.createdAt,
+        };
+      }),
+      pagination: result.pagination,
+    };
   }
 
   @Get('public/:slug')
@@ -48,6 +71,7 @@ export class BlogsController {
         id: (blogObj.userId as any)?._id,
         firstName: (blogObj.userId as any)?.firstName,
         lastName: (blogObj.userId as any)?.lastName,
+        profileImage: (blogObj.userId as any)?.profileImage || '',
       },
       likeCount: blogObj.likeCount,
       commentCount: blogObj.commentCount,

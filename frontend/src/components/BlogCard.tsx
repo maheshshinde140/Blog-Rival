@@ -15,33 +15,55 @@ interface BlogCardProps {
 export default function BlogCard({ blog, isOwner = false, onEdit, onDelete }: BlogCardProps) {
   const authorFirstName = blog.author?.firstName;
   const authorLastName = blog.author?.lastName;
+  const authorName = getAuthorName(authorFirstName, authorLastName);
+  const initials = `${authorFirstName?.[0] || ''}${authorLastName?.[0] || ''}`.toUpperCase() || 'BR';
+  const authorTag = `${authorFirstName || ''}${authorLastName || ''}`.toLowerCase() || 'blogrival-member';
 
   return (
-    <article className="card">
+    <article className="card feed-card feed-post-card">
+      <div className="feed-post-header">
+        {blog.author?.profileImage ? (
+          <Image
+            src={blog.author.profileImage}
+            alt={authorName}
+            className="feed-post-avatar-image"
+            width={84}
+            height={84}
+            unoptimized
+          />
+        ) : (
+          <div className="feed-post-avatar">{initials}</div>
+        )}
+        <div className="feed-post-author">
+          <div className="feed-post-author-row">
+            <p className="feed-post-name">{authorName}</p>
+            <span className="feed-post-badge">Public</span>
+          </div>
+          <p className="feed-post-date">@{authorTag} | {formatDate(blog.createdAt)}</p>
+        </div>
+      </div>
+
+      <h3 className="card-title feed-card-title">{blog.title}</h3>
       {blog.featuredImage && (
         <Image
           src={blog.featuredImage}
           alt={blog.title}
-          className="blog-image"
+          className="blog-image feed-post-image"
           width={1200}
           height={675}
           unoptimized
         />
       )}
-      <h3 className="card-title">{blog.title}</h3>
-      <p className="muted">
-        By {getAuthorName(authorFirstName, authorLastName)} | {formatDate(blog.createdAt)}
-      </p>
-      <p style={{ marginTop: '0.85rem' }}>{truncateText(blog.summary || '', 150)}</p>
+      <p className="feed-card-summary">{truncateText(blog.summary || 'No summary available yet.', 230)}</p>
 
-      <div className="stat-row">
-        <span className="pill">{blog.likeCount} likes</span>
-        <span className="pill">{blog.commentCount} comments</span>
+      <div className="feed-post-engagement">
+        <span>{blog.likeCount} likes</span>
+        <span>{blog.commentCount} comments</span>
       </div>
 
-      <div className="btn-group" style={{ marginTop: '1rem' }}>
+      <div className="btn-group feed-card-actions">
         <Link href={`/blog/${blog.slug}`} className="btn btn-primary">
-          Read More
+          Read Story
         </Link>
         {isOwner && (
           <>
@@ -57,3 +79,4 @@ export default function BlogCard({ blog, isOwner = false, onEdit, onDelete }: Bl
     </article>
   );
 }
+

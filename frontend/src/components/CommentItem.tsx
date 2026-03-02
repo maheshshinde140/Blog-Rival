@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Comment as CommentType } from '@/types';
 import { formatDate, getAuthorName } from '@/lib/utils';
 
@@ -10,13 +11,28 @@ interface CommentItemProps {
 }
 
 export default function CommentItem({ comment, isOwner = false, onDelete }: CommentItemProps) {
+  const name = getAuthorName(comment.author.firstName, comment.author.lastName);
+  const initials = `${comment.author.firstName?.[0] || ''}${comment.author.lastName?.[0] || ''}`.toUpperCase() || 'BR';
+
   return (
     <article className="card">
-      <div style={{ marginBottom: '0.6rem' }}>
-        <strong>{getAuthorName(comment.author.firstName, comment.author.lastName)}</strong>
-        <span className="muted" style={{ marginLeft: '0.55rem', fontSize: '0.9rem' }}>
-          {formatDate(comment.createdAt)}
-        </span>
+      <div className="comment-head">
+        {comment.author.profileImage ? (
+          <Image
+            src={comment.author.profileImage}
+            alt={name}
+            className="comment-avatar-image"
+            width={70}
+            height={70}
+            unoptimized
+          />
+        ) : (
+          <span className="comment-avatar-fallback">{initials}</span>
+        )}
+        <div>
+          <strong>{name}</strong>
+          <p className="muted">{formatDate(comment.createdAt)}</p>
+        </div>
       </div>
       <p>{comment.content}</p>
       {isOwner && (

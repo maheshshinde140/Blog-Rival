@@ -1,13 +1,15 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function Navbar() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
   const router = useRouter();
   const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim() || 'Account';
+  const initials = `${user?.firstName?.[0] || ''}${user?.lastName?.[0] || ''}`.toUpperCase() || 'BR';
 
   const handleLogout = () => {
     logout();
@@ -25,7 +27,11 @@ export default function Navbar() {
             <li>
               <Link href="/feed" className="navbar-link">Feed</Link>
             </li>
-            {isAuthenticated ? (
+            {isLoading ? (
+              <li>
+                <span className="navbar-user">Loading...</span>
+              </li>
+            ) : isAuthenticated ? (
               <>
                 <li>
                   <Link href="/dashboard" className="navbar-link">Dashboard</Link>
@@ -34,7 +40,24 @@ export default function Navbar() {
                   <Link href="/dashboard/profile" className="navbar-link">Profile</Link>
                 </li>
                 <li>
-                  <span className="navbar-user">{displayName}</span>
+                  <div className="navbar-user-block">
+                    {user?.profileImage ? (
+                      <Image
+                        src={user.profileImage}
+                        alt={displayName}
+                        className="navbar-avatar-image"
+                        width={70}
+                        height={70}
+                        unoptimized
+                      />
+                    ) : (
+                      <span className="navbar-avatar-fallback">{initials}</span>
+                    )}
+                    <div className="navbar-user-meta">
+                      <span className="navbar-user">{displayName}</span>
+                      <span className="navbar-user-email">{user?.email}</span>
+                    </div>
+                  </div>
                 </li>
                 <li>
                   <button onClick={handleLogout} className="btn btn-secondary">

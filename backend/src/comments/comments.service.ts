@@ -31,7 +31,7 @@ export class CommentsService {
     });
 
     await comment.save();
-    await comment.populate('userId', 'firstName lastName');
+    await comment.populate('userId', 'firstName lastName profileImage');
 
     // Increment comment count
     await this.blogsService.incrementCommentCount(blogId);
@@ -43,6 +43,7 @@ export class CommentsService {
         id: comment.userId?._id,
         firstName: comment.userId?.firstName,
         lastName: comment.userId?.lastName,
+        profileImage: comment.userId?.profileImage || '',
       },
       createdAt: comment.createdAt,
     };
@@ -52,7 +53,7 @@ export class CommentsService {
     const [comments, total] = await Promise.all([
       this.commentModel
         .find({ blogId })
-        .populate('userId', 'firstName lastName')
+        .populate('userId', 'firstName lastName profileImage')
         .sort({ createdAt: -1 })
         .skip(pagination.skip)
         .limit(pagination.limit)
@@ -68,6 +69,7 @@ export class CommentsService {
           id: comment.userId?._id,
           firstName: comment.userId?.firstName,
           lastName: comment.userId?.lastName,
+          profileImage: comment.userId?.profileImage || '',
         },
         createdAt: comment.createdAt,
       })),

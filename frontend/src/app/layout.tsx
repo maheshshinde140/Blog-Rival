@@ -4,6 +4,7 @@ import { Lora, Plus_Jakarta_Sans } from 'next/font/google';
 import '@/app/globals.css';
 import Navbar from '@/components/Navbar';
 import RouteProgress from '@/components/RouteProgress';
+import { AuthProvider } from '@/hooks/useAuth';
 
 const displayFont = Lora({
   subsets: ['latin'],
@@ -61,9 +62,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body className={`${displayFont.variable} ${bodyFont.variable}`}>
-        <RouteProgress />
-        <Navbar />
-        <main className="container main-content">{children}</main>
+        <AuthProvider>
+          <RouteProgress />
+          <Navbar />
+          <main className="container main-content">{children}</main>
+        </AuthProvider>
       </body>
     </html>
   );

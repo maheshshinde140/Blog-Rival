@@ -13,6 +13,7 @@ export class CommentResponseDto {
     id: string;
     firstName: string;
     lastName: string;
+    profileImage?: string;
   };
   createdAt!: Date;
 }

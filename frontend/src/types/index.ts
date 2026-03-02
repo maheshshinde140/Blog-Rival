@@ -43,6 +43,7 @@ export interface PublicBlog {
     id: string;
     firstName: string;
     lastName: string;
+    profileImage?: string;
   };
   likeCount: number;
   commentCount: number;
@@ -59,6 +60,7 @@ export interface FeedBlog {
     id: string;
     firstName: string;
     lastName: string;
+    profileImage?: string;
   };
   likeCount: number;
   commentCount: number;
@@ -72,6 +74,7 @@ export interface Comment {
     id: string;
     firstName: string;
     lastName: string;
+    profileImage?: string;
   };
   createdAt: string;
 }

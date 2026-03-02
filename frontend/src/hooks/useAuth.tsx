@@ -1,27 +1,63 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { authStorage } from '@/lib/authStorage';
 import { apiClient } from '@/lib/apiClient';
 import { User } from '@/types';
 
-export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
+type AuthContextValue = {
+  user: User | null;
+  isLoading: boolean;
+  error: string | null;
+  isAuthenticated: boolean;
+  register: (email: string, password: string, firstName: string, lastName: string) => Promise<any>;
+  login: (email: string, password: string) => Promise<any>;
+  logout: () => void;
+  refreshProfile: () => Promise<User>;
+  updateProfile: (data: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    profileImage?: string;
+    bio?: string;
+    location?: string;
+    website?: string;
+  }) => Promise<User>;
+  uploadProfileImage: (file: File) => Promise<{ profileImage: string }>;
+  requestPasswordReset: (email: string) => Promise<{ message: string; resetToken?: string; expiresAt?: string }>;
+  resetPassword: (token: string, password: string) => Promise<{ message: string }>;
+};
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(() => authStorage.getUser());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
-      if (authStorage.isAuthenticated()) {
-        try {
-          const currentUser = await apiClient.getCurrentUser();
-          setUser(currentUser);
-        } catch {
-          authStorage.clearAll();
-          setUser(null);
-        }
+      if (!authStorage.isAuthenticated()) {
+        setUser(null);
+        setIsLoading(false);
+        return;
       }
-      setIsLoading(false);
+
+      const cachedUser = authStorage.getUser();
+      if (cachedUser) {
+        setUser(cachedUser);
+      }
+
+      try {
+        const currentUser = await apiClient.getCurrentUser();
+        setUser(currentUser);
+        authStorage.setUser(currentUser);
+      } catch {
+        authStorage.clearAll();
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     checkAuth();
@@ -29,35 +65,43 @@ export function useAuth() {
 
   const register = useCallback(async (email: string, password: string, firstName: string, lastName: string) => {
     setError(null);
+    setIsLoading(true);
     try {
       const response = await apiClient.register(email, password, firstName, lastName);
       authStorage.setToken(response.accessToken);
       if (response.refreshToken) {
         authStorage.setRefreshToken(response.refreshToken);
       }
+      authStorage.setUser(response.user);
       setUser(response.user);
       return response;
     } catch (err: any) {
       const message = err.response?.data?.message || 'Registration failed';
       setError(message);
       throw err;
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     setError(null);
+    setIsLoading(true);
     try {
       const response = await apiClient.login(email, password);
       authStorage.setToken(response.accessToken);
       if (response.refreshToken) {
         authStorage.setRefreshToken(response.refreshToken);
       }
+      authStorage.setUser(response.user);
       setUser(response.user);
       return response;
     } catch (err: any) {
       const message = err.response?.data?.message || 'Login failed';
       setError(message);
       throw err;
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -68,9 +112,11 @@ export function useAuth() {
   }, []);
 
   const refreshProfile = useCallback(async () => {
+    setError(null);
     try {
       const profile = await apiClient.getMyProfile();
       setUser(profile);
+      authStorage.setUser(profile);
       return profile;
     } catch (err: any) {
       const message = err.response?.data?.message || 'Failed to load profile';
@@ -93,6 +139,7 @@ export function useAuth() {
       try {
         const profile = await apiClient.updateMyProfile(data);
         setUser(profile);
+        authStorage.setUser(profile);
         return profile;
       } catch (err: any) {
         const message = err.response?.data?.message || 'Failed to update profile';
@@ -107,7 +154,12 @@ export function useAuth() {
     setError(null);
     try {
       const response = await apiClient.uploadMyProfileImage(file);
-      setUser(prev => (prev ? { ...prev, profileImage: response.profileImage } : prev));
+      setUser(prev => {
+        if (!prev) return prev;
+        const nextUser = { ...prev, profileImage: response.profileImage };
+        authStorage.setUser(nextUser);
+        return nextUser;
+      });
       return response;
     } catch (err: any) {
       const message = err.response?.data?.message || 'Failed to upload profile image';
@@ -138,18 +190,43 @@ export function useAuth() {
     }
   }, []);
 
-  return {
-    user,
-    isLoading,
-    error,
-    isAuthenticated: !!user,
-    register,
-    login,
-    logout,
-    refreshProfile,
-    updateProfile,
-    uploadProfileImage,
-    requestPasswordReset,
-    resetPassword,
-  };
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      user,
+      isLoading,
+      error,
+      isAuthenticated: !!user,
+      register,
+      login,
+      logout,
+      refreshProfile,
+      updateProfile,
+      uploadProfileImage,
+      requestPasswordReset,
+      resetPassword,
+    }),
+    [
+      user,
+      isLoading,
+      error,
+      register,
+      login,
+      logout,
+      refreshProfile,
+      updateProfile,
+      uploadProfileImage,
+      requestPasswordReset,
+      resetPassword,
+    ],
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 }

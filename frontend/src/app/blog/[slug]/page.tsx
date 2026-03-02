@@ -91,10 +91,36 @@ export default function BlogPage() {
   if (!blog) return null;
 
   const isOwnBlog = user?.id === blog.author.id;
+  const blogAuthorInitials =
+    `${(blog.author.firstName?.[0] || '').toUpperCase()}${(blog.author.lastName?.[0] || '').toUpperCase()}` || 'BR';
 
   return (
     <section className="blog-wrap page-shell">
       <article className="card">
+        <div className="blog-author-head">
+          {blog.author.profileImage ? (
+            <Image
+              src={blog.author.profileImage}
+              alt={getAuthorName(blog.author.firstName, blog.author.lastName)}
+              className="blog-author-avatar-image"
+              width={88}
+              height={88}
+              unoptimized
+            />
+          ) : (
+            <span className="blog-author-avatar-fallback">
+              {blogAuthorInitials}
+            </span>
+          )}
+          <div>
+            <p className="blog-author-name">{getAuthorName(blog.author.firstName, blog.author.lastName)}</p>
+            <p className="muted">
+              {formatDate(blog.createdAt)}
+              {isOwnBlog ? ' | Your post' : ''}
+            </p>
+          </div>
+        </div>
+
         {blog.featuredImage && (
           <Image
             src={blog.featuredImage}
@@ -107,10 +133,6 @@ export default function BlogPage() {
         )}
 
         <h1>{blog.title}</h1>
-        <p className="muted" style={{ marginTop: '0.55rem' }}>
-          By {getAuthorName(blog.author.firstName, blog.author.lastName)} | {formatDate(blog.createdAt)}
-          {isOwnBlog ? ' | Your post' : ''}
-        </p>
 
         <div className="content-article" style={{ marginTop: '1.4rem', fontSize: '1.06rem' }}>
           {blog.content.split('\n').map((paragraph, i) => (

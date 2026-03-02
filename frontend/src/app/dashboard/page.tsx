@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useBlogs } from '@/hooks/useBlogs';
@@ -50,10 +51,27 @@ export default function DashboardPage() {
 
       {user && (
         <div className="card profile-mini">
-          <div>
-            <h3>{user.firstName} {user.lastName}</h3>
-            <p className="muted">{user.email}</p>
-            {user.bio && <p style={{ marginTop: '0.5rem' }}>{user.bio}</p>}
+          <div className="profile-mini-main">
+            {user.profileImage ? (
+              <Image
+                src={user.profileImage}
+                alt={`${user.firstName} ${user.lastName}`}
+                className="profile-mini-avatar-image"
+                width={80}
+                height={80}
+                unoptimized
+              />
+            ) : (
+              <span className="profile-mini-avatar-fallback">
+                {(user.firstName?.[0] || '').toUpperCase()}
+                {(user.lastName?.[0] || '').toUpperCase()}
+              </span>
+            )}
+            <div>
+              <h3>{user.firstName} {user.lastName}</h3>
+              <p className="muted">{user.email}</p>
+              {user.bio && <p style={{ marginTop: '0.5rem' }}>{user.bio}</p>}
+            </div>
           </div>
           <Link href="/dashboard/profile" className="btn btn-secondary">
             Edit Profile
@@ -84,7 +102,14 @@ export default function DashboardPage() {
                   slug: blog.slug,
                   summary: blog.summary,
                   featuredImage: blog.featuredImage,
-                  author: user ? { id: user.id, firstName: user.firstName, lastName: user.lastName } : { id: '', firstName: '', lastName: '' },
+                  author: user
+                    ? {
+                        id: user.id,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        profileImage: user.profileImage,
+                      }
+                    : { id: '', firstName: '', lastName: '', profileImage: '' },
                   likeCount: blog.likeCount,
                   commentCount: blog.commentCount,
                   createdAt: blog.createdAt,

@@ -19,6 +19,8 @@ import { AppController } from './app.controller';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         uri: configService.get<string>('MONGODB_URI') || 'mongodb://localhost:27017/blog-rival',
+        serverSelectionTimeoutMS: 10000,
+        connectTimeoutMS: 10000,
       }),
     }),
     AuthModule,

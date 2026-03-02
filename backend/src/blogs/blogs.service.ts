@@ -40,7 +40,7 @@ export class BlogsService {
     const [blogs, total] = await Promise.all([
       this.blogModel
         .find({ isPublished: true })
-        .populate('userId', 'firstName lastName')
+        .populate('userId', 'firstName lastName profileImage')
         .sort({ createdAt: -1 })
         .skip(pagination.skip)
         .limit(pagination.limit)
@@ -62,7 +62,7 @@ export class BlogsService {
   async findBySlug(slug: string): Promise<Blog> {
     const blog = await this.blogModel
       .findOne({ slug, isPublished: true })
-      .populate('userId', 'firstName lastName')
+      .populate('userId', 'firstName lastName profileImage')
       .exec();
 
     if (!blog) {
@@ -84,7 +84,7 @@ export class BlogsService {
     const [blogs, total] = await Promise.all([
       this.blogModel
         .find({ userId })
-        .populate('userId', 'firstName lastName')
+        .populate('userId', 'firstName lastName profileImage')
         .sort({ createdAt: -1 })
         .skip(pagination.skip)
         .limit(pagination.limit)

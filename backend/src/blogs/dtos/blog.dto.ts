@@ -72,6 +72,7 @@ export class PublicBlogResponseDto {
     id: string;
     firstName: string;
     lastName: string;
+    profileImage?: string;
   };
   likeCount!: number;
   commentCount!: number;
@@ -88,6 +89,7 @@ export class FeedBlogDto {
     id: string;
     firstName: string;
     lastName: string;
+    profileImage?: string;
   };
   likeCount!: number;
   commentCount!: number;
